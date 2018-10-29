@@ -110,6 +110,7 @@ UserSchema.statics.findByCredentials = function(email, password) {
 };
 
 UserSchema.pre('save', function(next) {
+    console.log('UserSchema pre save...');
     var user = this;
 
     if (user.isModified('password')) {
@@ -124,8 +125,9 @@ UserSchema.pre('save', function(next) {
     }
 });
 
+// console.log('Creating new user...');
 const User = mongoose.model('User', UserSchema);
-
+// console.log(User);
 module.exports = {
     User
 }

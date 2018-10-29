@@ -1,8 +1,11 @@
 require('./config/config');
+const fs = require('fs');
 
 const _ = require('lodash');
 const express = require('express');
+const hbs = require('hbs');
 const bodyParser = require('body-parser');
+const multer = require('multer');
 const {ObjectID} = require('mongodb');
 
 const {mongoose} = require('./db/mongoose');
@@ -12,8 +15,19 @@ const {authenticate} = require('./middleware/authenticate');
 
 const app = express();
 const port = process.env.PORT || 3000;
+// const upload = multer();
 
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.static(__dirname + '/public'));
+
+app.set('view engine', 'hbs');
+app.set('views', __dirname + '/views');
+
+hbs.registerPartials(__dirname + '/views/partials');
+
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
 app.post('/todos', authenticate, (req, res) => {
     console.log('Posting todo...');
@@ -114,15 +128,25 @@ app.patch('/todos/:id', authenticate, (req, res) => {
     });
 });
 
+app.get('/users', (req, res) => {
+    res.render('index');
+});
+
 app.post('/users', (req, res) => {
+    console.log('POST /users route');
+    // console.log('req.body', req.body);
+    // console.log('req.query', req.query);
     const body = _.pick(req.body, ['email', 'password']);
     const user = new User(body);
 
     user.save().then(() => {
+        console.log('Saved user...');
         return user.generateAuthToken();
     }).then((token) => {
         res.header('x-auth', token).send(user);
     }).catch((error) => {
+        console.log('Error saving user...');
+        console.log(JSON.stringify(error, undefined, 2));
         res.status(400).send(error);
     });
 })
